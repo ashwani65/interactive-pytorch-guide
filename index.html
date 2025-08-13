@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive PyTorch Learning Hub</title>
+    <meta name="description" content="Interactive PyTorch Learning Hub covering foundations, architectures, transfer learning strategy, engineering practices, and mastery.">
+    <meta name="theme-color" content="#D97706">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals with Muted Accents -->
+    <!-- Application Structure Plan: The application is structured as a progressive learning journey with five main thematic sections: 'Foundations', 'Vision', 'Strategy', 'Engineering', and 'Mastery'. This non-linear, thematic approach allows users to either follow a logical progression or jump directly to a topic of interest. A sticky sidebar navigation provides clear signposting and easy access to all sections. Key concepts like the ML workflow and model architectures are presented as interactive diagrams or comparative tables, making them more digestible than plain text. This structure was chosen to transform the dense report into an engaging, self-paced educational tool that prioritizes user exploration and conceptual understanding over simple information presentation. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: ML Workflow -> Goal: Organize/Inform -> Viz/Method: Interactive HTML/CSS diagram -> Interaction: Hover to highlight steps -> Justification: Visually breaks down a core process, making it easier to learn and remember than a list.
+        - Report Info: Linear/MLP vs. CNN -> Goal: Compare -> Viz/Method: Interactive comparison table -> Interaction: Click tabs to switch between architecture details -> Justification: Directly juxtaposes two key concepts for clear understanding of their differences.
+        - Report Info: Transfer Learning Process -> Goal: Organize/Inform -> Viz/Method: Numbered step-by-step guide with icons -> Interaction: N/A, static visual guide -> Justification: Simplifies a multi-step process into a clear, easy-to-follow visual recipe.
+        - Report Info: Deployment Trade-offs -> Goal: Compare -> Viz/Method: Interactive comparison table -> Interaction: Click tabs to view details for Cloud vs. On-Device -> Justification: Clarifies complex decision factors for a key MLOps concept.
+        - Report Info: Experiment Tracking Tools -> Goal: Compare -> Viz/Method: Bar chart (simulated) -> Interaction: Hover over bars to see tool details -> Justification: Provides a quick visual comparison of different tools based on effort and features.
+        - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF8;
+            color: #4B4B4B;
+        }
+        .nav-link {
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+        .nav-link.active {
+            color: #D97706;
+            border-left-color: #D97706;
+            background-color: #FEF3C7;
+        }
+        .nav-link:hover {
+            color: #D97706;
+            background-color: #FEF3C7;
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .interactive-tab {
+            transition: all 0.3s ease;
+        }
+        .interactive-tab.active {
+            background-color: #D97706;
+            color: #FFFFFF;
+        }
+        .interactive-tab-content {
+            display: none;
+        }
+        .interactive-tab-content.active {
+            display: block;
+        }
+        .workflow-step {
+            transition: all 0.3s ease;
+            border: 1px solid #E5E7EB;
+        }
+        .workflow-step:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            border-color: #D97706;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+         @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Mobile header -->
+    <header class="md:hidden sticky top-0 z-30 bg-white/90 backdrop-blur border-b">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="text-xl">🔥</span>
+                <span class="font-semibold text-gray-800">PyTorch Hub</span>
+            </div>
+            <button id="mobileMenuBtn" aria-controls="mobileNav" aria-expanded="false" class="p-2 rounded-md border text-gray-700" title="Open menu">
+                ☰
+            </button>
+        </div>
+    </header>
+
+    <div class="relative min-h-screen md:flex">
+        <!-- Sidebar -->
+        <aside class="hidden md:block md:sticky md:top-0 md:h-screen bg-white shadow-md w-full md:w-64 overflow-y-auto">
+            <div class="p-6">
+                <h1 class="text-2xl font-bold text-gray-800">PyTorch Hub</h1>
+                <p class="mt-1 text-sm text-gray-500">Comprehensive Guide</p>
+            </div>
+            <nav class="flex-1 px-4 space-y-2">
+                <a href="#foundations" class="nav-link flex items-center px-4 py-2 text-gray-700 rounded-md">
+                    <span class="mr-3">📚</span> Foundations
+                </a>
+                <a href="#vision" class="nav-link flex items-center px-4 py-2 text-gray-700 rounded-md">
+                    <span class="mr-3">👁️</span> Vision
+                </a>
+                <a href="#architectures" class="nav-link flex items-center px-4 py-2 text-gray-700 rounded-md">
+                    <span class="mr-3">🧠</span> Architectures
+                </a>
+                <a href="#strategy" class="nav-link flex items-center px-4 py-2 text-gray-700 rounded-md">
+                    <span class="mr-3">🎯</span> Strategy
+                </a>
+                <a href="#engineering" class="nav-link flex items-center px-4 py-2 text-gray-700 rounded-md">
+                    <span class="mr-3">⚙️</span> Engineering
+                </a>
+                <a href="#mastery" class="nav-link flex items-center px-4 py-2 text-gray-700 rounded-md">
+                    <span class="mr-3">🏆</span> Mastery
+                </a>
+                <a href="#advanced" class="nav-link flex items-center px-4 py-2 text-gray-700 rounded-md">
+                    <span class="mr-3">🚀</span> Advanced
+                </a>
+                <a href="#toolkit" class="nav-link flex items-center px-4 py-2 text-gray-700 rounded-md">
+                    <span class="mr-3">🛠️</span> Pro Toolkit
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Mobile drawer nav -->
+        <nav id="mobileNav" class="md:hidden fixed inset-0 z-40 hidden">
+            <div class="absolute inset-0 bg-black/40" data-close="mobileNav"></div>
+            <div class="absolute left-0 top-0 bottom-0 w-72 max-w-[85%] bg-white shadow-xl p-4 overflow-y-auto">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold text-gray-800">Navigate</h2>
+                    <button class="p-2" data-close="mobileNav" aria-label="Close">✕</button>
+                </div>
+                <div class="space-y-2">
+                    <a href="#foundations" class="block px-3 py-2 rounded-md text-gray-700 hover:bg-amber-50">📚 Foundations</a>
+                    <a href="#vision" class="block px-3 py-2 rounded-md text-gray-700 hover:bg-amber-50">👁️ Vision</a>
+                    <a href="#architectures" class="block px-3 py-2 rounded-md text-gray-700 hover:bg-amber-50">🧠 Architectures</a>
+                    <a href="#strategy" class="block px-3 py-2 rounded-md text-gray-700 hover:bg-amber-50">🎯 Strategy</a>
+                    <a href="#engineering" class="block px-3 py-2 rounded-md text-gray-700 hover:bg-amber-50">⚙️ Engineering</a>
+                    <a href="#mastery" class="block px-3 py-2 rounded-md text-gray-700 hover:bg-amber-50">🏆 Mastery</a>
+                    <a href="#advanced" class="block px-3 py-2 rounded-md text-gray-700 hover:bg-amber-50">🚀 Advanced</a>
+                    <a href="#toolkit" class="block px-3 py-2 rounded-md text-gray-700 hover:bg-amber-50">🛠️ Pro Toolkit</a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="flex-1 p-4 sm:p-6 lg:p-10">
+            <!-- Foundations Section -->
+            <section id="foundations" class="content-section">
+                <h2 class="text-3xl font-bold text-gray-800">📚 The PyTorch Paradigm</h2>
+                <p class="mt-2 text-lg text-gray-600">This section establishes the most critical pillars for any deep learning practitioner: the tensor, the end-to-end workflow, and the automatic differentiation engine that powers it all.</p>
+
+                <div class="mt-8 bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-xl font-semibold text-gray-800">The Core Component: Tensors</h3>
+                    <p class="mt-2 text-gray-600">At the absolute core of PyTorch is the tensor, a multi-dimensional array that can be moved to specialized hardware like GPUs to accelerate computation. Every tensor has three critical attributes:</p>
+                    <div class="mt-4 grid md:grid-cols-3 gap-4 text-center">
+                        <div class="p-4 bg-amber-50 rounded-lg"><h4 class="font-bold text-amber-800">Shape</h4><p class="text-sm text-amber-700">A tuple describing the tensor's dimensions.</p></div>
+                        <div class="p-4 bg-sky-50 rounded-lg"><h4 class="font-bold text-sky-800">Datatype (`dtype`)</h4><p class="text-sm text-sky-700">The type of data held, like `torch.float32`.</p></div>
+                        <div class="p-4 bg-emerald-50 rounded-lg"><h4 class="font-bold text-emerald-800">Device</h4><p class="text-sm text-emerald-700">The memory where the tensor is stored: `cpu` or `cuda`.</p></div>
+                    </div>
+                </div>
+                
+                <div class="mt-8 bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-xl font-semibold text-gray-800">The Engine: Autograd & Dynamic Graphs</h3>
+                    <p class="mt-2 text-gray-600">PyTorch's "magic" comes from `autograd`, its automatic differentiation engine. As you perform operations, PyTorch builds a **dynamic computational graph**. When you call `loss.backward()`, it traverses this graph backward to compute gradients for all learnable parameters (`requires_grad=True`). This "define-by-run" approach makes debugging intuitive, as the graph is created fresh on every forward pass.</p>
+                </div>
+
+                <div class="mt-8">
+                    <h3 class="text-2xl font-semibold text-gray-800 mb-4">The End-to-End Workflow</h3>
+                     <p class="mt-2 mb-6 text-gray-600">Mastery of PyTorch is about internalizing this systematic, repeatable process for solving machine learning problems. Hover over each step to learn more.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="workflow-step bg-white p-6 rounded-lg"><h4 class="text-lg font-bold">1. Data Preparation</h4><p class="text-sm mt-1">Transform data into tensors and split into training, validation, and testing sets.</p></div>
+                        <div class="workflow-step bg-white p-6 rounded-lg"><h4 class="text-lg font-bold">2. Build Model</h4><p class="text-sm mt-1">Define the neural network architecture by subclassing `nn.Module`.</p></div>
+                        <div class="workflow-step bg-white p-6 rounded-lg"><h4 class="text-lg font-bold">3. Train Model</h4><p class="text-sm mt-1">Iteratively learn by minimizing a loss function with an optimizer.</p></div>
+                        <div class="workflow-step bg-white p-6 rounded-lg"><h4 class="text-lg font-bold">4. Inference</h4><p class="text-sm mt-1">Make predictions on new data using the trained model in `eval()` mode.</p></div>
+                        <div class="workflow-step bg-white p-6 rounded-lg"><h4 class="text-lg font-bold">5. Save & Load</h4><p class="text-sm mt-1">Persist the model's learned parameters (`state_dict`) for reuse.</p></div>
+                        <div class="workflow-step bg-white p-6 rounded-lg"><h4 class="text-lg font-bold">6. Scale</h4><p class="text-sm mt-1">Write device-agnostic code (`.to(device)`) to run on CPU or GPU.</p></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Vision Section -->
+            <section id="vision" class="content-section">
+                <h2 class="text-3xl font-bold text-gray-800">👁️ Architecting Intelligence for Vision</h2>
+                <p class="mt-2 text-lg text-gray-600">This section applies the master workflow to computer vision, moving from simple linear models to Convolutional Neural Networks (CNNs). This illustrates a core principle: the model's architecture must suit the data's structure.</p>
+
+                <div class="mt-8 bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-xl font-semibold text-gray-800">Architecture Showdown: MLP vs. CNN</h3>
+                    <p class="mt-2 text-gray-600">While a Multi-Layer Perceptron (MLP) can classify simple images, it ignores spatial information. A CNN is specifically designed to leverage the grid-like structure of images, making it far more powerful for vision tasks. Click the tabs to compare.</p>
+                    <div class="mt-4">
+                        <div class="flex border-b">
+                            <button data-tab="mlp" class="interactive-tab px-4 py-2 -mb-px font-semibold text-gray-600 border-b-2 border-transparent rounded-t">Linear/MLP</button>
+                            <button data-tab="cnn" class="interactive-tab px-4 py-2 -mb-px font-semibold text-gray-600 border-b-2 border-transparent rounded-t">CNN</button>
+                        </div>
+                        <div id="mlp-content" class="interactive-tab-content p-4">
+                            <h4 class="font-bold text-lg">Multi-Layer Perceptron (MLP)</h4>
+                            <ul class="mt-2 list-disc list-inside text-gray-600 space-y-1">
+                                <li><strong>Core Layers:</strong> `nn.Linear`, `nn.ReLU`, `nn.Flatten`.</li>
+                                <li><strong>Data Handling:</strong> Flattens a 2D image into a 1D vector.</li>
+                                <li><strong>Key Assumption:</strong> Each pixel is independent; spatial relationships are ignored.</li>
+                                <li><strong>Best For:</strong> Structured, tabular data where feature order isn't critical.</li>
+                            </ul>
+                        </div>
+                        <div id="cnn-content" class="interactive-tab-content p-4">
+                            <h4 class="font-bold text-lg">Convolutional Neural Network (CNN)</h4>
+                            <ul class="mt-2 list-disc list-inside text-gray-600 space-y-1">
+                                <li><strong>Core Layers:</strong> `nn.Conv2d`, `nn.MaxPool2d`, `nn.ReLU`.</li>
+                                <li><strong>Data Handling:</strong> Processes data in its 2D grid form, preserving spatial structure.</li>
+                                <li><strong>Key Assumption:</strong> Features are local; nearby pixels are highly related.</li>
+                                <li><strong>Best For:</strong> Unstructured data with spatial patterns, like images and video.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Architectures Section -->
+            <section id="architectures" class="content-section">
+                <h2 class="text-3xl font-bold text-gray-800">🧠 Architectures & Paradigms</h2>
+                <p class="mt-2 text-lg text-gray-600">Beyond CNNs, modern deep learning uses a diverse zoo of architectures and training strategies. This section explores the key ideas that power today's most advanced models.</p>
+
+                <div class="mt-8 bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-xl font-semibold text-gray-800">Handling Sequences: RNNs, LSTMs & GRUs</h3>
+                    <p class="mt-2 text-gray-600">For data where order matters (like text or time series), Recurrent Neural Networks (RNNs) maintain a "memory" or hidden state that is passed from one timestep to the next.</p>
+                    <div class="mt-4">
+                        <div class="flex border-b">
+                            <button data-tab="rnn" class="interactive-tab px-4 py-2 -mb-px font-semibold text-gray-600 border-b-2 border-transparent rounded-t">RNN</button>
+                            <button data-tab="lstm" class="interactive-tab px-4 py-2 -mb-px font-semibold text-gray-600 border-b-2 border-transparent rounded-t">LSTM/GRU</button>
+                        </div>
+                        <div id="rnn-content" class="interactive-tab-content p-4">
+                            <h4 class="font-bold text-lg">Vanilla RNN (`nn.RNN`)</h4>
+                            <ul class="mt-2 list-disc list-inside text-gray-600 space-y-1">
+                                <li><strong>Concept:</strong> A simple loop where the output at each step is a function of the current input and the previous step's hidden state.</li>
+                                <li><strong>Limitation:</strong> Suffers from the vanishing gradient problem, making it difficult to learn long-range dependencies.</li>
+                            </ul>
+                        </div>
+                        <div id="lstm-content" class="interactive-tab-content p-4">
+                            <h4 class="font-bold text-lg">LSTM & GRU (`nn.LSTM`, `nn.GRU`)</h4>
+                            <ul class="mt-2 list-disc list-inside text-gray-600 space-y-1">
+                                <li><strong>Concept:</strong> Advanced RNNs with internal "gates" (input, output, forget gates) that control the flow of information. This allows them to selectively remember or forget information over long sequences.</li>
+                                <li><strong>Advantage:</strong> Mitigates the vanishing gradient problem, making them the standard choice for most sequential tasks. GRUs are a slightly simpler, more computationally efficient variant of LSTMs.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-xl font-semibold text-gray-800">The Engine of LLMs: Attention & Transformers</h3>
+                    <p class="mt-2 text-gray-600">Transformers discard recurrence entirely. Instead, the **self-attention** mechanism allows every token in a sequence to directly attend to every other token, calculating "attention scores" to weigh their importance. This enables parallel processing and capturing complex, long-range dependencies, making it the foundation for models like GPT and BERT.</p>
+                </div>
+
+                <div class="mt-8 bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-xl font-semibold text-gray-800">Generative Modeling</h3>
+                    <p class="mt-2 text-gray-600">These models learn the underlying distribution of data to generate new, synthetic samples.</p>
+                    <div class="mt-4 grid md:grid-cols-3 gap-4">
+                        <div class="p-4 bg-red-50 rounded-lg"><h4 class="font-bold text-red-800">VAEs</h4><p class="text-sm text-red-700">Variational Autoencoders learn a compressed, latent representation of data, good for generating fuzzy but coherent samples.</p></div>
+                        <div class="p-4 bg-blue-50 rounded-lg"><h4 class="font-bold text-blue-800">GANs</h4><p class="text-sm text-blue-700">Generative Adversarial Networks use a two-player game between a Generator and a Discriminator to produce sharp, realistic samples.</p></div>
+                        <div class="p-4 bg-green-50 rounded-lg"><h4 class="font-bold text-green-800">Diffusion</h4><p class="text-sm text-green-700">The state-of-the-art. These models learn to reverse a process of gradually adding noise to an image, allowing for high-fidelity, controllable generation.</p></div>
+                    </div>
+                </div>
+
+                <div class="mt-8 bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-xl font-semibold text-gray-800">Modern Training Paradigm: Self-Supervised Learning (SSL)</h3>
+                    <p class="mt-2 text-gray-600">SSL is a technique to pre-train models on vast amounts of unlabeled data. It creates a "pretext task" from the data itself. For example, it might mask out a word in a sentence and train the model to predict it. By solving billions of these self-generated problems, the model learns a rich, general-purpose representation of the data, which can then be fine-tuned for specific downstream tasks with very little labeled data.</p>
+                </div>
+            </section>
+
+            <!-- Strategy Section -->
+            <section id="strategy" class="content-section">
+                <h2 class="text-3xl font-bold text-gray-800">🎯 The Art of Leverage: Mastering Transfer Learning</h2>
+                <p class="mt-2 text-lg text-gray-600">Instead of training models from scratch, we can adapt powerful, pre-existing models to new problems. This technique, transfer learning, is a cornerstone of modern, efficient deep learning.</p>
+                
+                <div class="mt-8 bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-xl font-semibold text-gray-800">Transfer Learning in 5 Steps</h3>
+                    <p class="mt-2 text-gray-600">This "standing on the shoulders of giants" approach allows you to leverage state-of-the-art architectures with less data and computation.</p>
+                    <div class="mt-4 space-y-4">
+                        <div class="flex items-start"><div class="flex-shrink-0 h-10 w-10 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold">1</div><div class="ml-4"><h4 class="font-semibold">Find & Load Model</h4><p class="text-gray-600">Load a pre-trained model (e.g., `EfficientNet_B0`) from a library like `torchvision.models`.</p></div></div>
+                        <div class="flex items-start"><div class="flex-shrink-0 h-10 w-10 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold">2</div><div class="ml-4"><h4 class="font-semibold">Freeze Base Layers</h4><p class="text-gray-600">Set `requires_grad=False` on the feature extractor layers to preserve their learned knowledge.</p></div></div>
+                        <div class="flex items-start"><div class="flex-shrink-0 h-10 w-10 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold">3</div><div class="ml-4"><h4 class="font-semibold">Customize Classifier</h4><p class="text-gray-600">Replace the final layer with a new `nn.Linear` layer suited to your custom task's number of classes.</p></div></div>
+                        <div class="flex items-start"><div class="flex-shrink-0 h-10 w-10 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold">4</div><div class="ml-4"><h4 class="font-semibold">Ensure Data Consistency</h4><p class="text-gray-600">Crucially, transform your custom data using the *exact same* pipeline as the original model.</p></div></div>
+                        <div class="flex items-start"><div class="flex-shrink-0 h-10 w-10 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold">5</div><div class="ml-4"><h4 class="font-semibold">Train the Head</h4><p class="text-gray-600">Run the training loop. Only the new, unfrozen classifier head will be updated.</p></div></div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Engineering Section -->
+            <section id="engineering" class="content-section">
+                <h2 class="text-3xl font-bold text-gray-800">⚙️ From Notebooks to Production Code</h2>
+                <p class="mt-2 text-lg text-gray-600">This section covers the engineering disciplines that elevate a project from an exploratory script to a maintainable and reproducible system.</p>
+
+                <div class="mt-8 grid md:grid-cols-2 gap-8">
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-xl font-semibold text-gray-800">Going Modular</h3>
+                        <p class="mt-2 text-gray-600">Refactor code into a collection of Python scripts, each with a single responsibility. This improves readability, reusability, and collaboration.</p>
+                        <ul class="mt-4 space-y-2 text-sm">
+                            <li class="flex items-center"><span class="font-mono bg-gray-200 text-gray-700 px-2 py-1 rounded mr-2">data_setup.py</span> Handles Datasets and DataLoaders.</li>
+                            <li class="flex items-center"><span class="font-mono bg-gray-200 text-gray-700 px-2 py-1 rounded mr-2">model_builder.py</span> Defines the NN architecture.</li>
+                            <li class="flex items-center"><span class="font-mono bg-gray-200 text-gray-700 px-2 py-1 rounded mr-2">engine.py</span> Contains the training/evaluation loops.</li>
+                            <li class="flex items-center"><span class="font-mono bg-gray-200 text-gray-700 px-2 py-1 rounded mr-2">train.py</span> The main script that runs everything.</li>
+                        </ul>
+                    </div>
+                     <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-xl font-semibold text-gray-800">Experiment Tracking</h3>
+                        <p class="mt-2 text-gray-600">Systematically track experiments to move from chaotic tinkering to scientific improvement. Tools like TensorBoard are essential for this.</p>
+                        <div class="chart-container mt-4">
+                             <canvas id="experimentChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Mastery Section -->
+            <section id="mastery" class="content-section">
+                 <h2 class="text-3xl font-bold text-gray-800">🏆 Bridging Research and Reality</h2>
+                <p class="mt-2 text-lg text-gray-600">This capstone section covers the full lifecycle of a machine learning project, from implementing cutting-edge research to the practical necessity of deploying a trained model for real-world use.</p>
+                
+                <div class="mt-8 bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-xl font-semibold text-gray-800">Deployment: Cloud vs. On-Device</h3>
+                    <p class="mt-2 text-gray-600">Before deploying, you must decide where the model will run. This choice depends entirely on your application's requirements for latency, cost, privacy, and connectivity.</p>
+                    <div class="mt-4">
+                        <div class="flex border-b">
+                            <button data-tab="cloud" class="interactive-tab px-4 py-2 -mb-px font-semibold text-gray-600 border-b-2 border-transparent rounded-t">☁️ Cloud</button>
+                            <button data-tab="edge" class="interactive-tab px-4 py-2 -mb-px font-semibold text-gray-600 border-b-2 border-transparent rounded-t">📱 On-Device / Edge</button>
+                        </div>
+                        <div id="cloud-content" class="interactive-tab-content p-4">
+                            <h4 class="font-bold text-lg">Cloud Deployment</h4>
+                            <ul class="mt-2 list-disc list-inside text-gray-600 space-y-1">
+                                <li><strong>Latency:</strong> Higher (due to network round-trip).</li>
+                                <li><strong>Compute Power:</strong> Near unlimited and scalable.</li>
+                                <li><strong>Model Size:</strong> Can support very large, complex models.</li>
+                                <li><strong>Cost:</strong> Pay-per-use, can escalate with usage.</li>
+                                <li><strong>Privacy:</strong> Data leaves the device, which can be a concern.</li>
+                                <li><strong>Connectivity:</strong> Always required.</li>
+                            </ul>
+                        </div>
+                        <div id="edge-content" class="interactive-tab-content p-4">
+                            <h4 class="font-bold text-lg">On-Device / Edge Deployment</h4>
+                            <ul class="mt-2 list-disc list-inside text-gray-600 space-y-1">
+                                <li><strong>Latency:</strong> Very low (no network delay).</li>
+                                <li><strong>Compute Power:</strong> Limited by the device's hardware.</li>
+                                <li><strong>Model Size:</strong> Must be small and efficient.</li>
+                                <li><strong>Cost:</strong> Fixed (part of the device cost).</li>
+                                <li><strong>Privacy:</strong> High (data never leaves the device).</li>
+                                <li><strong>Connectivity:</strong> Often works offline.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-xl font-semibold text-gray-800">Common Errors & Fixes</h3>
+                    <p class="mt-2 text-gray-600">Navigating errors is a fundamental part of programming. Understanding these three common issues will make your debugging process far more efficient.</p>
+                    <div class="mt-4 space-y-4">
+                        <div><h4 class="font-semibold text-red-600">1. Shape Errors</h4><p class="text-sm text-gray-600"><strong>Cause:</strong> `in_features` of a layer doesn't match the input tensor's feature dimension. <br><strong>Solution:</strong> Print the tensor's `.shape` right before the error and adjust the layer's `in_features` to match.</p></div>
+                        <div><h4 class="font-semibold text-blue-600">2. Device Errors</h4><p class="text-sm text-gray-600"><strong>Cause:</strong> Tensors are on different devices (e.g., model on `cuda`, data on `cpu`). <br><strong>Solution:</strong> Systematically use `.to(device)` on the model and all data tensors before any computation.</p></div>
+                        <div><h4 class="font-semibold text-green-600">3. Datatype Errors</h4><p class="text-sm text-gray-600"><strong>Cause:</strong> A tensor's `dtype` doesn't match what a function expects (e.g., `CrossEntropyLoss` needs `long` for labels). <br><strong>Solution:</strong> Check the documentation and cast tensors to the correct `dtype` using `.to(dtype)`.</p></div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Advanced Section -->
+            <section id="advanced" class="content-section">
+                <h2 class="text-3xl font-bold text-gray-800">🚀 Beyond the Basics: Advanced Concepts</h2>
+                <p class="mt-2 text-lg text-gray-600">Mastering the fundamentals is the first step. This section introduces advanced topics that are crucial for building professional, scalable, and high-performance machine learning systems.</p>
+            
+                <div class="mt-8 grid md:grid-cols-2 gap-8">
+                    <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-xl font-semibold text-gray-800">Scaling Up: Distributed Training</h3><p class="mt-2 text-gray-600">Train massive models on huge datasets by distributing the workload across multiple GPUs or machines.</p><ul class="mt-4 space-y-3 text-sm"><li class="flex items-start"><strong class="font-semibold text-amber-700 w-32 shrink-0">DP vs. DDP</strong> `DataParallel` is simpler for single-machine, multi-GPU setups, but `DistributedDataParallel` is the faster, industry-standard choice for all distributed training.</li><li class="flex items-start"><strong class="font-semibold text-amber-700 w-32 shrink-0">Frameworks</strong> Libraries like PyTorch Lightning and Hugging Face Accelerate abstract away boilerplate code, simplifying distributed training setup.</li></ul></div>
+                    <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-xl font-semibold text-gray-800">Peak Performance: Optimization</h3><p class="mt-2 text-gray-600">Make your models faster and smaller for efficient deployment, especially on resource-constrained devices.</p><ul class="mt-4 space-y-3 text-sm"><li class="flex items-start"><strong class="font-semibold text-sky-700 w-32 shrink-0">`torch.compile()`</strong> A one-line JIT compiler in PyTorch 2.0+ that can dramatically speed up models by fusing operations.</li><li class="flex items-start"><strong class="font-semibold text-sky-700 w-32 shrink-0">Quantization</strong> Reduces model size and speeds up inference by converting weights to lower-precision integers (e.g., INT8).</li></ul></div>
+                    <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-xl font-semibold text-gray-800">The PyTorch Ecosystem</h3><p class="mt-2 text-gray-600">Leverage a rich ecosystem of specialized libraries built on top of PyTorch to solve domain-specific problems.</p><ul class="mt-4 space-y-3 text-sm"><li class="flex items-start"><strong class="font-semibold text-emerald-700 w-32 shrink-0">NLP</strong> Hugging Face `transformers` is the standard for text-based tasks.</li><li class="flex items-start"><strong class="font-semibold text-emerald-700 w-32 shrink-0">Graphs</strong> PyTorch Geometric (PyG) is the go-to for graph neural networks.</li><li class="flex items-start"><strong class="font-semibold text-emerald-700 w-32 shrink-0">RL</strong> Stable-Baselines3 provides robust implementations of reinforcement learning algorithms.</li></ul></div>
+                    <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-xl font-semibold text-gray-800">Deployment & Portability</h3><p class="mt-2 text-gray-600">Move your models from Python to production environments like C++ servers, mobile apps, or browsers.</p><ul class="mt-4 space-y-3 text-sm"><li class="flex items-start"><strong class="font-semibold text-red-700 w-32 shrink-0">ONNX</strong> The Open Neural Network Exchange format allows you to export your model for use with high-performance inference engines like TensorRT.</li><li class="flex items-start"><strong class="font-semibold text-red-700 w-32 shrink-0">TorchScript</strong> A way to serialize your model so it can be run in non-Python environments, crucial for many production deployment pipelines.</li></ul></div>
+                </div>
+            </section>
+            
+            <!-- Professional Toolkit Section -->
+            <section id="toolkit" class="content-section">
+                <h2 class="text-3xl font-bold text-gray-800">🛠️ The Professional's Toolkit: Day-to-Day Engineering</h2>
+                <p class="mt-2 text-lg text-gray-600">This section covers the practical, hands-on skills that engineers use daily to build, debug, and refine sophisticated models. These techniques are what separate academic understanding from professional execution.</p>
+            
+                <div class="mt-8 grid md:grid-cols-2 gap-8">
+                    <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-xl font-semibold text-gray-800">Effective Debugging & Visualization</h3><p class="mt-2 text-gray-600">Go beyond print statements to understand *why* your model is behaving a certain way.</p><ul class="mt-4 space-y-3 text-sm"><li class="flex items-start"><strong class="font-semibold text-purple-700 w-32 shrink-0">PyTorch Hooks</strong> Register custom functions that execute during a forward or backward pass. Use them to inspect intermediate activations and gradients to diagnose issues like vanishing/exploding gradients.</li><li class="flex items-start"><strong class="font-semibold text-purple-700 w-32 shrink-0">Activation Maps</strong> For vision models, visualize the output of convolutional layers to see what features the model is "looking at". This helps debug if a model is focusing on irrelevant parts of an image.</li></ul></div>
+                    <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-xl font-semibold text-gray-800">Advanced Data Augmentation</h3><p class="mt-2 text-gray-600">Create more robust models by generating realistic training data. This is a key technique for preventing overfitting.</p><ul class="mt-4 space-y-3 text-sm"><li class="flex items-start"><strong class="font-semibold text-cyan-700 w-32 shrink-0">Library Choice</strong> While `torchvision.transforms` is great for basics, libraries like `Albumentations` are significantly faster and offer a much wider range of augmentations, especially for vision tasks.</li><li class="flex items-start"><strong class="font-semibold text-cyan-700 w-32 shrink-0">MixUp & CutMix</strong> Advanced techniques that combine multiple images and their labels during training, forcing the model to learn more robust features.</li></ul></div>
+                    <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-xl font-semibold text-gray-800">Hyperparameter Tuning</h3><p class="mt-2 text-gray-600">Systematically find the best set of hyperparameters (like learning rate, batch size, etc.) for your model.</p><ul class="mt-4 space-y-3 text-sm"><li class="flex items-start"><strong class="font-semibold text-pink-700 w-32 shrink-0">Frameworks</strong> Tools like `Optuna` or `Ray Tune` automate the process of searching the hyperparameter space using intelligent algorithms (e.g., Bayesian optimization) that are far more efficient than random or grid search.</li><li class="flex items-start"><strong class="font-semibold text-pink-700 w-32 shrink-0">Schedulers</strong> Instead of a fixed learning rate, dynamically adjust it during training (`torch.optim.lr_scheduler`). Techniques like "One Cycle" or "Cosine Annealing" can lead to faster convergence and better final performance.</li></ul></div>
+                    <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-xl font-semibold text-gray-800">Custom Components</h3><p class="mt-2 text-gray-600">Implement novel ideas by building your own layers and loss functions. This is a core skill for research and LLM engineering.</p><ul class="mt-4 space-y-3 text-sm"><li class="flex items-start"><strong class="font-semibold text-lime-700 w-32 shrink-0">Custom Loss</strong> Subclass `nn.Module` to create a loss function tailored to your specific business problem, such as a loss that heavily penalizes certain types of errors over others.</li><li class="flex items-start"><strong class="font-semibold text-lime-700 w-32 shrink-0">Custom Layers</strong> Write your own `nn.Module` with custom `forward` logic and learnable `nn.Parameter` tensors to implement novel architectures from the latest research papers.</li></ul></div>
+                    <div class="bg-white p-6 rounded-lg shadow"><h3 class="text-xl font-semibold text-gray-800">MLOps & Reproducibility</h3><p class="mt-2 text-gray-600">Ensure your work is reliable, reproducible, and ready for production.</p><ul class="mt-4 space-y-3 text-sm"><li class="flex items-start"><strong class="font-semibold text-gray-700 w-32 shrink-0">Data Versioning</strong> Use tools like DVC (Data Version Control) to version your large datasets alongside your Git code, ensuring you can always reproduce an experiment.</li><li class="flex items-start"><strong class="font-semibold text-gray-700 w-32 shrink-0">CI/CD for ML</strong> Set up automated pipelines (e.g., using GitHub Actions) that automatically test, train, and even deploy your models when you push new code, ensuring quality and reliability.</li></ul></div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <button id="askAiBtn" aria-controls="askAiPanel" aria-expanded="false" title="Ask AI"
+        class="fixed bottom-6 right-6 z-40 px-4 py-3 rounded-full shadow-lg bg-amber-600 text-white font-semibold hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-400">
+        ✨ Ask AI
+    </button>
+    <!-- Ask AI UI (temporarily disabled)
+    
+
+    <div id="askAiPanel" hidden class="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+        <div class="absolute inset-0 bg-black/30" data-close="askAi"></div>
+        <div class="relative w-full sm:max-w-lg bg-white rounded-t-2xl sm:rounded-2xl shadow-xl overflow-hidden">
+            <div class="flex items-center justify-between px-4 py-3 border-b">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800">Ask AI</h3>
+                    <p id="askAiStatus" class="text-xs text-gray-500">On-device model loads on first use (WebGPU required).</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="askAiRetry" class="text-xs px-2 py-1 rounded border text-gray-600 hover:bg-gray-50" title="Retry loading model">Retry</button>
+                    <button id="askAiDiag" class="text-xs px-2 py-1 rounded border text-gray-600 hover:bg-gray-50" title="Run diagnostics">Diagnose</button>
+                    <button class="p-2 text-gray-500 hover:text-gray-700" data-close="askAi" aria-label="Close">✕</button>
+                </div>
+            </div>
+            <div id="askAiMessages" class="h-[50vh] sm:h-96 overflow-y-auto px-4 py-3 space-y-3 bg-gray-50"></div>
+            <form id="askAiForm" class="flex items-end gap-2 p-3 border-t bg-white">
+                <textarea id="askAiInput" rows="2" placeholder="Ask about PyTorch, this guide, or ML engineering…" required
+                    class="flex-1 resize-none rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-400"></textarea>
+                <button type="submit" class="px-4 py-2 rounded-lg bg-amber-600 text-white font-semibold hover:bg-amber-700 disabled:opacity-50">Send</button>
+            </form>
+        </div>
+    </div>
+    -->
+
+    <!-- WebLLM runtime disabled
+    <script defer src="https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm/dist/index.min.js"></script>
+    -->
+
+    <!-- Ask AI logic disabled
+    <script>
+    (function() {
+        const btn = document.getElementById('askAiBtn');
+        const panel = document.getElementById('askAiPanel');
+        const statusEl = document.getElementById('askAiStatus');
+        const messagesEl = document.getElementById('askAiMessages');
+        const form = document.getElementById('askAiForm');
+        const input = document.getElementById('askAiInput');
+
+        let engine = null;
+        let initializing = false;
+        let lastInitError = null;
+        const MODEL_PRIMARY = 'Llama-3.2-1B-Instruct-q4f16_1-MLC';
+        const MODEL_FALLBACK = 'Qwen2.5-0.5B-Instruct-q4f16_1-MLC';
+
+        function togglePanel(show) {
+            const willShow = show ?? panel.hidden;
+            panel.hidden = !willShow;
+            btn.setAttribute('aria-expanded', String(willShow));
+            if (willShow) {
+                setTimeout(() => input.focus({ preventScroll: true }), 0);
+            }
+        }
+
+        function appendBubble(role, text) {
+            const wrapper = document.createElement('div');
+            const bubble = document.createElement('div');
+            bubble.className = role === 'user'
+                ? 'ml-auto max-w-[85%] rounded-xl bg-amber-600 text-white px-3 py-2'
+                : 'mr-auto max-w-[85%] rounded-xl bg-white border px-3 py-2 text-gray-800';
+            bubble.textContent = text;
+            wrapper.appendChild(bubble);
+            messagesEl.appendChild(wrapper);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+            return bubble;
+        }
+
+        function updateStatus(text) {
+            statusEl.textContent = text;
+        }
+
+        function collectDiagnostics() {
+            const info = {
+                userAgent: navigator.userAgent,
+                webgpu: 'gpu' in navigator,
+                adapter: null,
+                cdnScript: (Array.from(document.scripts).find(sc => sc.src && sc.src.includes('@mlc-ai/web-llm'))||{}).src || null,
+                webllmLoaded: !!window.webllm,
+            };
+            return info;
+        }
+
+        async function loadWebLLMIfNeeded() {
+            if (window.webllm) return true;
+            updateStatus('Loading AI runtime…');
+            // Try jsDelivr
+            await new Promise((resolve) => {
+                const s = document.createElement('script');
+                s.src = 'https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm/dist/index.min.js';
+                s.defer = true;
+                s.onload = () => resolve(true);
+                s.onerror = () => resolve(false);
+                document.head.appendChild(s);
+            });
+            if (window.webllm) return true;
+            // Fallback to unpkg
+            await new Promise((resolve) => {
+                const s = document.createElement('script');
+                s.src = 'https://unpkg.com/@mlc-ai/web-llm/dist/index.min.js';
+                s.defer = true;
+                s.onload = () => resolve(true);
+                s.onerror = () => resolve(false);
+                document.head.appendChild(s);
+            });
+            return !!window.webllm;
+        }
+
+        function getWebLLMWorkerUrl() {
+            const script = Array.from(document.scripts).find(sc => sc.src && sc.src.includes('@mlc-ai/web-llm'));
+            if (script && script.src) {
+                const base = new URL('.', script.src).href; // points to dist/
+                return base + 'worker.js';
+            }
+            return 'https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm/dist/worker.js';
+        }
+
+        async function ensureEngine() {
+            if (engine || initializing) return engine;
+            if (!('gpu' in navigator)) {
+                updateStatus('WebGPU not available. Try Chrome/Edge (latest) or enable WebGPU.');
+                return null;
+            }
+            const ok = await loadWebLLMIfNeeded();
+            if (!ok || !window.webllm) {
+                updateStatus('AI runtime not loaded. Check your network and refresh.');
+                return null;
+            }
+            const initWithModel = async (modelId, label) => {
+                updateStatus(`Loading ${label} model… (first load may take a while)`);
+                const worker = new Worker(getWebLLMWorkerUrl(), { type: 'module' });
+                const initPromise = webllm.CreateWebWorkerMLCEngine(worker, {
+                    model: modelId,
+                    initProgressCallback: (p) => {
+                        if (p && p.text) updateStatus(p.text);
+                    },
+                });
+                // Timeout after 120s
+                const timeoutPromise = new Promise((_, rej) => setTimeout(() => rej(new Error('Model init timeout')), 120000));
+                return await Promise.race([initPromise, timeoutPromise]);
+            };
+
+            try {
+                initializing = true;
+                engine = await initWithModel(MODEL_PRIMARY, 'primary');
+            } catch (e1) {
+                console.warn('Primary model load failed, trying fallback…', e1);
+                lastInitError = e1;
+                try {
+                    engine = await initWithModel(MODEL_FALLBACK, 'smaller fallback');
+                } catch (e2) {
+                    console.error('Fallback model also failed.', e2);
+                    lastInitError = e2;
+                    engine = null;
+                }
+            } finally {
+                initializing = false;
+            }
+
+            if (engine) {
+                updateStatus('Model ready. Ask away!');
+                return engine;
+            }
+
+            updateStatus('Failed to initialize on-device AI. Click Retry or use a WebGPU-enabled browser.');
+            return null;
+        }
+
+        async function generateReply(prompt) {
+            const sys = 'You are a concise PyTorch mentor. Focus on explanations relevant to this page (foundations, vision/CNNs, transfer learning, engineering, mastery). Keep answers short and actionable.';
+            const eng = await ensureEngine();
+            if (!eng) return 'AI unavailable in this browser. Try Chrome/Edge with WebGPU, or search the page.';
+            try {
+                const stream = await eng.chat.completions.create({
+                    model: eng.getModelId ? eng.getModelId() : undefined,
+                    messages: [
+                        { role: 'system', content: sys },
+                        { role: 'user', content: prompt }
+                    ],
+                    stream: true,
+                    temperature: 0.2,
+                });
+
+                let full = '';
+                for await (const chunk of stream) {
+                    const delta = chunk?.choices?.[0]?.delta?.content || '';
+                    if (delta) {
+                        full += delta;
+                        yield delta;
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+                yield '\n[Error] Unable to generate a response.';
+            }
+        }
+
+        // Events
+        btn.addEventListener('click', () => togglePanel());
+        panel.addEventListener('click', (e) => {
+            const target = e.target;
+            if (target instanceof HTMLElement && target.closest('[data-close="askAi"]')) togglePanel(false);
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !panel.hidden) togglePanel(false);
+        });
+
+        // Retry button
+        const retryBtn = document.getElementById('askAiRetry');
+        retryBtn?.addEventListener('click', async (e) => {
+            e.preventDefault();
+            updateStatus('Retrying initialization…');
+            engine = null;
+            await ensureEngine();
+        });
+
+        // Diagnostics button
+        const diagBtn = document.getElementById('askAiDiag');
+        diagBtn?.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const bubble = appendBubble('assistant', 'Running diagnostics…');
+            const info = collectDiagnostics();
+            try {
+                if (info.webgpu && navigator.gpu && navigator.gpu.requestAdapter) {
+                    const adapter = await navigator.gpu.requestAdapter();
+                    info.adapter = adapter ? { name: adapter.name || 'unknown' } : null;
+                }
+            } catch (_) {}
+            bubble.textContent = `Diagnostics:\n- WebGPU: ${info.webgpu} ${info.adapter ? `(adapter: ${info.adapter.name})` : ''}\n- Runtime loaded: ${info.webllmLoaded}\n- CDN script: ${info.cdnScript || 'none'}\n- Browser: ${info.userAgent}`;
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const q = input.value.trim();
+            if (!q) return;
+            input.value = '';
+            const userBubble = appendBubble('user', q);
+            const aiBubble = appendBubble('assistant', '');
+
+            form.querySelector('button[type="submit"]').disabled = true;
+
+            // Stream tokens
+            const streamer = generateReply(q);
+            if (typeof streamer?.[Symbol.asyncIterator] === 'function') {
+                try {
+                    for await (const token of streamer) {
+                        aiBubble.textContent += token;
+                        messagesEl.scrollTop = messagesEl.scrollHeight;
+                    }
+                } finally {
+                    form.querySelector('button[type="submit"]').disabled = false;
+                }
+            } else {
+                // Fallback non-streaming result string
+                aiBubble.textContent = await streamer;
+                form.querySelector('button[type="submit"]').disabled = false;
+            }
+        });
+    })();
+    </script>
+    -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // --- Navigation Logic ---
+            const navLinks = document.querySelectorAll('.nav-link');
+            const contentSections = document.querySelectorAll('.content-section');
+
+            function updateActiveContent() {
+                const hash = window.location.hash || '#foundations';
+                navLinks.forEach(link => {
+                    link.classList.toggle('active', link.getAttribute('href') === hash);
+                });
+                contentSections.forEach(section => {
+                    section.classList.toggle('active', '#' + section.id === hash);
+                });
+            }
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetHash = this.getAttribute('href');
+                    if (window.location.hash !== targetHash) {
+                        history.pushState(null, null, targetHash);
+                        updateActiveContent();
+                    }
+                });
+            });
+            
+            window.addEventListener('popstate', updateActiveContent);
+
+            // --- Tab Logic ---
+            const tabContainers = document.querySelectorAll('.mt-4'); 
+
+            tabContainers.forEach(container => {
+                const tabs = container.querySelectorAll('.interactive-tab');
+                const contents = container.querySelectorAll('.interactive-tab-content');
+
+                if (tabs.length === 0) return;
+
+                tabs.forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        tabs.forEach(t => t.classList.remove('active'));
+                        contents.forEach(c => c.classList.remove('active'));
+
+                        tab.classList.add('active');
+                        const targetContent = container.querySelector('#' + tab.dataset.tab + '-content');
+                        if (targetContent) {
+                            targetContent.classList.add('active');
+                        }
+                    });
+                });
+
+                // Activate the first tab by default
+                if (tabs.length > 0) {
+                    tabs[0].classList.add('active');
+                    const firstContent = container.querySelector('#' + tabs[0].dataset.tab + '-content');
+                    if (firstContent) {
+                        firstContent.classList.add('active');
+                    }
+                }
+            });
+
+            // --- Chart.js for Experiment Tracking ---
+            const ctx = document.getElementById('experimentChart');
+            if (ctx) {
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Python Dicts/CSV', 'TensorBoard', 'Weights & Biases', 'MLFlow'],
+                        datasets: [{
+                            label: 'Setup Effort',
+                            data: [1, 3, 4, 6],
+                            backgroundColor: 'rgba(217, 119, 6, 0.2)',
+                            borderColor: 'rgba(217, 119, 6, 1)',
+                            borderWidth: 1
+                        }, {
+                            label: 'Feature Richness',
+                            data: [2, 7, 9, 10],
+                            backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Relative Score'
+                                }
+                            }
+                        },
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Comparison of Experiment Tracking Tools'
+                            },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false
+                            }
+                        },
+                    }
+                });
+            }
+            
+            // --- Initial Page Load ---
+            updateActiveContent();
+
+            // --- Mobile Drawer ---
+            const mobileBtn = document.getElementById('mobileMenuBtn');
+            const mobileNav = document.getElementById('mobileNav');
+            function toggleMobileNav(show){
+                const willShow = show ?? mobileNav.classList.contains('hidden');
+                mobileNav.classList.toggle('hidden', !willShow);
+                mobileBtn?.setAttribute('aria-expanded', String(willShow));
+                // lock scroll when open
+                document.body.style.overflow = willShow ? 'hidden' : '';
+            }
+            mobileBtn?.addEventListener('click', () => toggleMobileNav());
+            mobileNav?.addEventListener('click', (e) => {
+                const target = e.target;
+                if (target instanceof HTMLElement && (target.dataset.close === 'mobileNav' || target.tagName === 'A')) toggleMobileNav(false);
+            });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && mobileNav && !mobileNav.classList.contains('hidden')) toggleMobileNav(false);
+            });
+        });
+    </script>
+</body>
+</html>
